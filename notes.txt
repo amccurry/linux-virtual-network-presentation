@@ -24,8 +24,15 @@ ip link add vethxc3 type veth peer name vethnc3
 brctl addbr br1
 
 # create vxlans
-# both
-ip link add vx1 type vxlan id 42
+# host1
+# unicast
+#ip link add vx1 type vxlan id 42 local 192.168.56.200 dstport 4789
+ip link add vx1 type vxlan id 42 group 239.1.1.1 dev enp0s8
+
+# host2
+# unicast
+#ip link add vx1 type vxlan id 42 local 192.168.56.201 dstport 4789
+ip link add vx1 type vxlan id 42 group 239.1.1.1 dev enp0s8
 
 # connect everything
 # host1
@@ -50,11 +57,15 @@ nsenter -t $DOCKER_PID1 -n ip link set up vethnc1
 nsenter -t $DOCKER_PID2 -n ip link set up vethnc2
 ip link set up br1
 ip link set up vx1
-# host 1
+# host 2
 ip link set up vethxc3
 nsenter -t $DOCKER_PID3 -n ip link set up vethnc3
 ip link set up br1
 ip link set up vx1
 
-# add entries to hosts to fbd
-?????
+# add entries to hosts to fbd  (needed for unicast)
+# host1
+# bridge fdb append 00:00:00:00:00:00 dev vx1 dst 192.168.56.201
+
+# host2
+# bridge fdb append 00:00:00:00:00:00 dev vx1 dst 192.168.56.200
